@@ -2,9 +2,9 @@ import numpy as np
 from PIL import Image
 import time
 import math
-height = 5000
-width = 5000
-max_value= 1
+height = 10000
+width = 10000
+max_value= 2
 min_value= -2
 break_out=100
 data = np.zeros((height+1, width+1, 3), dtype=np.uint8)
@@ -18,36 +18,45 @@ def remap(val, low1, upper1, low2, upper2):
 def magnitude(x,y):
     return math.sqrt(x*x+y*y)
 start_time=time.time()
+itterations=0
 for x in range(width+1):
-    #print a
+    
     for y in range(height+1):
+	
         a=remap(x,0,width,min_value,max_value)
         b=remap(y,0,height,min_value,max_value)
-        a0=a
-        b0=b
         n=0
-        if magnitude(a,b)>2:
+        if (a*a+b*b)>4:
+            itterations+=1
             n=break_out
         else:
-            while(n<=break_out):
+            a0=a
+            b0=b
+            while(n<break_out):
+                itterations+=1
                 za=a*a-b*b+a0
                 zb=2*a*b+b0
                 a=za
                 b=zb
-                if(magnitude(a,b)>=2):
+                if((a*a+b*b)>4):
                     break
-                #print n
+                
                 n+=1
             
-        n=math.log(math.log(n+(1/math.log(2))))*255
-        if n>254:
+        #n=math.log(math.log(n+(1/math.log(2))))*255
+        n=int(remap(n,0,break_out,255,0))
+        
+        if n>255:
                 n=0
-        data[y,x]=[0,n,100]
-        #print n
+        data[y,x]=[n,n,n]
+        
     if x != 0 and (float(x)*100/width)%1==0:
         percent = x*100/float(width)
-        time_left = (time.time()-start_time)*100/percent 
-        print "{}% of the way done at {}\nEstimated compleation time {}\n---------------".format(int(percent),time.strftime("%H:%M:%S %m %d %Y", time.localtime()), time.strftime("%H:%M:%S %m %d %Y", time.localtime(time.time()+time_left)))
+        cur_time=time.time()
+        time_left = (cur_time-start_time)*(100/percent-1) 
+        print "{}% of the way done at {}\nEstimated compleation time {}\n---------------".format(int(percent),time.strftime("%H:%M:%S %m %d %Y", time.localtime()), time.strftime("%H:%M:%S %m %d %Y", time.localtime(cur_time+time_left)))
+print("Total itterations on a {} by {} board with a max itteration break of {}: {} itterations".format(width,height,break_out,itterations))
+print("\n\nYour itterations per second score is {}".format(itterations/(time.time()-start_time)))
 img=Image.fromarray(data, 'RGB')
-img.save('mandelbrot2.png')
+img.save('test.png')
 img.show()
